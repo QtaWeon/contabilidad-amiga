@@ -1,4 +1,7 @@
+import { FileDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { AsientoContable, CuentaMayor } from "@/types/accounting";
+import { exportLibroMayorPDF } from "@/lib/pdfExport";
 
 interface LibroMayorProps {
   asientos: AsientoContable[];
