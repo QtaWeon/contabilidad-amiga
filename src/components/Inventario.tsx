@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { ItemInventario } from "@/types/accounting";
+import { exportInventarioPDF } from "@/lib/pdfExport";
 
 interface InventarioProps {
   items: ItemInventario[];
