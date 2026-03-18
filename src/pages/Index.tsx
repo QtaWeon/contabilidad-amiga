@@ -108,7 +108,7 @@ const Index = () => {
       <AppSidebar activeModule={activeModule} onModuleChange={setActiveModule} />
       <main className="flex-1 p-8 pb-20 overflow-auto">
         {activeModule === "diario" && (
-          <LibroDiario asientos={asientos} onAddAsiento={handleAddAsiento} onDeleteAsiento={handleDeleteAsiento} />
+          <LibroDiario asientos={asientos} onAddAsiento={handleAddAsiento} onUpdateAsiento={handleUpdateAsiento} onDeleteAsiento={handleDeleteAsiento} />
         )}
         {activeModule === "mayor" && <LibroMayor asientos={asientos} />}
         {activeModule === "inventario" && (
