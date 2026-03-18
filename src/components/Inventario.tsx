@@ -40,6 +40,12 @@ const Inventario = ({ items, onAddItem, onDeleteItem }: InventarioProps) => {
           <h2 className="text-2xl font-display font-bold text-foreground">Inventario</h2>
           <p className="text-muted-foreground font-body text-sm">Control de bienes y mercadería</p>
         </div>
+        <div className="flex gap-2">
+          {items.length > 0 && (
+            <Button variant="outline" onClick={() => exportInventarioPDF(items)} className="font-body">
+              <FileDown className="h-4 w-4 mr-2" /> Exportar PDF
+            </Button>
+          )}
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button className="bg-accent text-accent-foreground hover:bg-accent/90 font-body">
