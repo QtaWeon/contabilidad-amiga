@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { AsientoContable, Partida } from "@/types/accounting";
 import { exportLibroDiarioPDF } from "@/lib/pdfExport";
+import CuentaSelector from "@/components/CuentaSelector";
 
 interface LibroDiarioProps {
   asientos: AsientoContable[];
