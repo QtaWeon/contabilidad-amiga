@@ -57,6 +57,16 @@ const Index = () => {
     }
   };
 
+  const handleUpdateAsiento = async (id: string, asiento: Omit<AsientoContable, "id" | "createdAt">) => {
+    try {
+      await updateDoc(doc(db, "asientos", id), { ...asiento });
+      toast({ title: "✓ Partida actualizada", description: "Los cambios se guardaron correctamente." });
+    } catch (error) {
+      console.error("Error updating asiento:", error);
+      toast({ title: "Error", description: "No se pudo actualizar la partida.", variant: "destructive" });
+    }
+  };
+
   const handleDeleteAsiento = async (id: string) => {
     try {
       await deleteDoc(doc(db, "asientos", id));
