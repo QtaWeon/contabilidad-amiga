@@ -64,6 +64,12 @@ const LibroDiario = ({ asientos, onAddAsiento, onDeleteAsiento }: LibroDiarioPro
           <h2 className="text-2xl font-display font-bold text-foreground">Libro Diario</h2>
           <p className="text-muted-foreground font-body text-sm">Registro cronológico de transacciones contables</p>
         </div>
+        <div className="flex gap-2">
+          {asientos.length > 0 && (
+            <Button variant="outline" onClick={() => exportLibroDiarioPDF(asientos)} className="font-body">
+              <FileDown className="h-4 w-4 mr-2" /> Exportar PDF
+            </Button>
+          )}
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button className="bg-accent text-accent-foreground hover:bg-accent/90 font-body">
