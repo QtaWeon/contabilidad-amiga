@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, FileDown } from "lucide-react";
+import { Plus, Trash2, FileDown, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -10,17 +10,41 @@ import CuentaSelector from "@/components/CuentaSelector";
 interface LibroDiarioProps {
   asientos: AsientoContable[];
   onAddAsiento: (asiento: Omit<AsientoContable, "id" | "createdAt">) => void;
+  onUpdateAsiento: (id: string, asiento: Omit<AsientoContable, "id" | "createdAt">) => void;
   onDeleteAsiento: (id: string) => void;
 }
 
-const LibroDiario = ({ asientos, onAddAsiento, onDeleteAsiento }: LibroDiarioProps) => {
+const emptyPartidas = (): Partida[] => [
+  { cuenta: "", debe: 0, haber: 0 },
+  { cuenta: "", debe: 0, haber: 0 },
+];
+
+const LibroDiario = ({ asientos, onAddAsiento, onUpdateAsiento, onDeleteAsiento }: LibroDiarioProps) => {
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [fecha, setFecha] = useState("");
   const [descripcion, setDescripcion] = useState("");
-  const [partidas, setPartidas] = useState<Partida[]>([
-    { cuenta: "", debe: 0, haber: 0 },
-    { cuenta: "", debe: 0, haber: 0 },
-  ]);
+  const [partidas, setPartidas] = useState<Partida[]>(emptyPartidas());
+
+  const resetForm = () => {
+    setEditingId(null);
+    setFecha("");
+    setDescripcion("");
+    setPartidas(emptyPartidas());
+  };
+
+  const openNew = () => {
+    resetForm();
+    setOpen(true);
+  };
+
+  const openEdit = (asiento: AsientoContable) => {
+    setEditingId(asiento.id ?? null);
+    setFecha(asiento.fecha);
+    setDescripcion(asiento.descripcion);
+    setPartidas(asiento.partidas.map(p => ({ ...p })));
+    setOpen(true);
+  };
 
   const addPartida = () => {
     setPartidas([...partidas, { cuenta: "", debe: 0, haber: 0 }]);
@@ -48,13 +72,12 @@ const LibroDiario = ({ asientos, onAddAsiento, onDeleteAsiento }: LibroDiarioPro
 
   const handleSubmit = () => {
     if (!fecha || !descripcion || !isBalanced) return;
-    onAddAsiento({ fecha, descripcion, partidas });
-    setFecha("");
-    setDescripcion("");
-    setPartidas([
-      { cuenta: "", debe: 0, haber: 0 },
-      { cuenta: "", debe: 0, haber: 0 },
-    ]);
+    if (editingId) {
+      onUpdateAsiento(editingId, { fecha, descripcion, partidas });
+    } else {
+      onAddAsiento({ fecha, descripcion, partidas });
+    }
+    resetForm();
     setOpen(false);
   };
 
@@ -71,15 +94,17 @@ const LibroDiario = ({ asientos, onAddAsiento, onDeleteAsiento }: LibroDiarioPro
               <FileDown className="h-4 w-4 mr-2" /> Exportar PDF
             </Button>
           )}
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button className="bg-accent text-accent-foreground hover:bg-accent/90 font-body">
+            <Button onClick={openNew} className="bg-accent text-accent-foreground hover:bg-accent/90 font-body">
               <Plus className="h-4 w-4 mr-2" /> Nueva Partida
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[640px] max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="font-display text-xl">Nueva Partida Contable</DialogTitle>
+              <DialogTitle className="font-display text-xl">
+                {editingId ? "Editar Partida Contable" : "Nueva Partida Contable"}
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 mt-4 font-body">
               <div className="grid grid-cols-2 gap-4">
@@ -124,7 +149,7 @@ const LibroDiario = ({ asientos, onAddAsiento, onDeleteAsiento }: LibroDiarioPro
                   </span>
                 </div>
                 <Button onClick={handleSubmit} disabled={!isBalanced || !fecha || !descripcion} className="bg-accent text-accent-foreground hover:bg-accent/90 font-body">
-                  Guardar Partida
+                  {editingId ? "Guardar Cambios" : "Guardar Partida"}
                 </Button>
               </div>
             </div>
@@ -142,7 +167,7 @@ const LibroDiario = ({ asientos, onAddAsiento, onDeleteAsiento }: LibroDiarioPro
               <th className="text-left px-4 py-3 font-semibold text-foreground">Descripción</th>
               <th className="text-right px-4 py-3 font-semibold text-foreground">Debe</th>
               <th className="text-right px-4 py-3 font-semibold text-foreground">Haber</th>
-              <th className="px-4 py-3 w-10"></th>
+              <th className="px-4 py-3 w-20"></th>
             </tr>
           </thead>
           <tbody>
@@ -157,9 +182,7 @@ const LibroDiario = ({ asientos, onAddAsiento, onDeleteAsiento }: LibroDiarioPro
               asiento.partidas.map((partida, partidaIdx) => (
                 <tr key={`${asiento.id}-${partidaIdx}`} className={asientoIdx % 2 === 0 ? "bg-card" : "bg-muted/30"}>
                   {partidaIdx === 0 && (
-                    <>
-                      <td className="px-4 py-2 align-top" rowSpan={asiento.partidas.length}>{asiento.fecha}</td>
-                    </>
+                    <td className="px-4 py-2 align-top" rowSpan={asiento.partidas.length}>{asiento.fecha}</td>
                   )}
                   <td className={`px-4 py-2 ${partida.haber > 0 && partida.debe === 0 ? "pl-10" : ""}`}>
                     {partida.cuenta}
@@ -173,9 +196,14 @@ const LibroDiario = ({ asientos, onAddAsiento, onDeleteAsiento }: LibroDiarioPro
                   <td className="px-4 py-2 text-right tabular-nums">{partida.haber > 0 ? `Q${partida.haber.toFixed(2)}` : ""}</td>
                   {partidaIdx === 0 && (
                     <td className="px-4 py-2 align-top" rowSpan={asiento.partidas.length}>
-                      <button onClick={() => asiento.id && onDeleteAsiento(asiento.id)} className="text-muted-foreground hover:text-destructive transition-colors">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <div className="flex gap-1">
+                        <button onClick={() => openEdit(asiento)} className="text-muted-foreground hover:text-primary transition-colors">
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => asiento.id && onDeleteAsiento(asiento.id)} className="text-muted-foreground hover:text-destructive transition-colors">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   )}
                 </tr>

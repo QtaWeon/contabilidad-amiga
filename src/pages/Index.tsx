@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { collection, addDoc, deleteDoc, doc, onSnapshot, orderBy, query, where } from "firebase/firestore";
+import { collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, orderBy, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/hooks/useAuth";
 import AppSidebar from "@/components/AppSidebar";
@@ -57,6 +57,16 @@ const Index = () => {
     }
   };
 
+  const handleUpdateAsiento = async (id: string, asiento: Omit<AsientoContable, "id" | "createdAt">) => {
+    try {
+      await updateDoc(doc(db, "asientos", id), { ...asiento });
+      toast({ title: "✓ Partida actualizada", description: "Los cambios se guardaron correctamente." });
+    } catch (error) {
+      console.error("Error updating asiento:", error);
+      toast({ title: "Error", description: "No se pudo actualizar la partida.", variant: "destructive" });
+    }
+  };
+
   const handleDeleteAsiento = async (id: string) => {
     try {
       await deleteDoc(doc(db, "asientos", id));
@@ -98,7 +108,7 @@ const Index = () => {
       <AppSidebar activeModule={activeModule} onModuleChange={setActiveModule} />
       <main className="flex-1 p-8 pb-20 overflow-auto">
         {activeModule === "diario" && (
-          <LibroDiario asientos={asientos} onAddAsiento={handleAddAsiento} onDeleteAsiento={handleDeleteAsiento} />
+          <LibroDiario asientos={asientos} onAddAsiento={handleAddAsiento} onUpdateAsiento={handleUpdateAsiento} onDeleteAsiento={handleDeleteAsiento} />
         )}
         {activeModule === "mayor" && <LibroMayor asientos={asientos} />}
         {activeModule === "inventario" && (
