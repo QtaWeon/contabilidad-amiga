@@ -1,60 +1,55 @@
 import { useState, useEffect } from "react";
-import { collection, addDoc, deleteDoc, doc, onSnapshot, orderBy, query } from "firebase/firestore";
+import { collection, addDoc, deleteDoc, doc, onSnapshot, orderBy, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useAuth } from "@/hooks/useAuth";
 import AppSidebar from "@/components/AppSidebar";
 import LibroDiario from "@/components/LibroDiario";
 import LibroMayor from "@/components/LibroMayor";
 import Inventario from "@/components/Inventario";
 import BalanceBar from "@/components/BalanceBar";
+import CatalogoCuentas from "@/components/CatalogoCuentas";
 import type { AsientoContable, ItemInventario } from "@/types/accounting";
 import { useToast } from "@/hooks/use-toast";
 
-type Module = "diario" | "mayor" | "inventario";
+type Module = "diario" | "mayor" | "inventario" | "catalogo";
 
 const Index = () => {
+  const { user } = useAuth();
   const [activeModule, setActiveModule] = useState<Module>("diario");
   const [asientos, setAsientos] = useState<AsientoContable[]>([]);
   const [inventarioItems, setInventarioItems] = useState<ItemInventario[]>([]);
   const { toast } = useToast();
 
-  // Subscribe to asientos
   useEffect(() => {
-    const q = query(collection(db, "asientos"), orderBy("createdAt", "desc"));
+    if (!user) return;
+    const q = query(collection(db, "asientos"), where("userId", "==", user.uid), orderBy("createdAt", "desc"));
     const unsub = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as AsientoContable[];
+      const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as AsientoContable[];
       setAsientos(data);
     }, (error) => {
       console.error("Error loading asientos:", error);
       toast({ title: "Error", description: "No se pudieron cargar los asientos.", variant: "destructive" });
     });
     return unsub;
-  }, []);
+  }, [user]);
 
-  // Subscribe to inventario
   useEffect(() => {
-    const q = query(collection(db, "inventario"), orderBy("createdAt", "desc"));
+    if (!user) return;
+    const q = query(collection(db, "inventario"), where("userId", "==", user.uid), orderBy("createdAt", "desc"));
     const unsub = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as ItemInventario[];
+      const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as ItemInventario[];
       setInventarioItems(data);
     }, (error) => {
       console.error("Error loading inventario:", error);
       toast({ title: "Error", description: "No se pudo cargar el inventario.", variant: "destructive" });
     });
     return unsub;
-  }, []);
+  }, [user]);
 
   const handleAddAsiento = async (asiento: Omit<AsientoContable, "id" | "createdAt">) => {
+    if (!user) return;
     try {
-      await addDoc(collection(db, "asientos"), {
-        ...asiento,
-        createdAt: Date.now(),
-      });
+      await addDoc(collection(db, "asientos"), { ...asiento, userId: user.uid, createdAt: Date.now() });
       toast({ title: "✓ Partida registrada", description: "La partida se guardó correctamente." });
     } catch (error) {
       console.error("Error adding asiento:", error);
@@ -65,7 +60,7 @@ const Index = () => {
   const handleDeleteAsiento = async (id: string) => {
     try {
       await deleteDoc(doc(db, "asientos", id));
-      toast({ title: "Partida eliminada", description: "Se eliminó la partida del libro diario." });
+      toast({ title: "Partida eliminada" });
     } catch (error) {
       console.error("Error deleting asiento:", error);
       toast({ title: "Error", description: "No se pudo eliminar la partida.", variant: "destructive" });
@@ -73,13 +68,12 @@ const Index = () => {
   };
 
   const handleAddInventarioItem = async (item: Omit<ItemInventario, "id" | "createdAt" | "costoTotal">) => {
+    if (!user) return;
     try {
       await addDoc(collection(db, "inventario"), {
-        ...item,
-        costoTotal: item.cantidad * item.costoUnitario,
-        createdAt: Date.now(),
+        ...item, costoTotal: item.cantidad * item.costoUnitario, userId: user.uid, createdAt: Date.now(),
       });
-      toast({ title: "✓ Artículo agregado", description: "El artículo se guardó en el inventario." });
+      toast({ title: "✓ Artículo agregado" });
     } catch (error) {
       console.error("Error adding item:", error);
       toast({ title: "Error", description: "No se pudo guardar el artículo.", variant: "destructive" });
@@ -89,14 +83,13 @@ const Index = () => {
   const handleDeleteInventarioItem = async (id: string) => {
     try {
       await deleteDoc(doc(db, "inventario", id));
-      toast({ title: "Artículo eliminado", description: "Se eliminó el artículo del inventario." });
+      toast({ title: "Artículo eliminado" });
     } catch (error) {
       console.error("Error deleting item:", error);
       toast({ title: "Error", description: "No se pudo eliminar el artículo.", variant: "destructive" });
     }
   };
 
-  // Calculate totals for balance bar
   const totalDebe = asientos.reduce((sum, a) => sum + a.partidas.reduce((s, p) => s + p.debe, 0), 0);
   const totalHaber = asientos.reduce((sum, a) => sum + a.partidas.reduce((s, p) => s + p.haber, 0), 0);
 
@@ -107,12 +100,11 @@ const Index = () => {
         {activeModule === "diario" && (
           <LibroDiario asientos={asientos} onAddAsiento={handleAddAsiento} onDeleteAsiento={handleDeleteAsiento} />
         )}
-        {activeModule === "mayor" && (
-          <LibroMayor asientos={asientos} />
-        )}
+        {activeModule === "mayor" && <LibroMayor asientos={asientos} />}
         {activeModule === "inventario" && (
           <Inventario items={inventarioItems} onAddItem={handleAddInventarioItem} onDeleteItem={handleDeleteInventarioItem} />
         )}
+        {activeModule === "catalogo" && <CatalogoCuentas />}
       </main>
       <BalanceBar totalDebe={totalDebe} totalHaber={totalHaber} />
     </div>

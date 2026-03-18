@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { AsientoContable, Partida } from "@/types/accounting";
 import { exportLibroDiarioPDF } from "@/lib/pdfExport";
+import CuentaSelector from "@/components/CuentaSelector";
 
 interface LibroDiarioProps {
   asientos: AsientoContable[];
@@ -101,7 +102,7 @@ const LibroDiario = ({ asientos, onAddAsiento, onDeleteAsiento }: LibroDiarioPro
                 </div>
                 {partidas.map((p, i) => (
                   <div key={i} className="grid grid-cols-[1fr_100px_100px_40px] gap-2">
-                    <Input value={p.cuenta} onChange={(e) => updatePartida(i, "cuenta", e.target.value)} placeholder="Nombre de cuenta" />
+                    <CuentaSelector value={p.cuenta} onChange={(v) => updatePartida(i, "cuenta", v)} />
                     <Input type="number" min="0" step="0.01" value={p.debe || ""} onChange={(e) => updatePartida(i, "debe", e.target.value)} className="text-right" />
                     <Input type="number" min="0" step="0.01" value={p.haber || ""} onChange={(e) => updatePartida(i, "haber", e.target.value)} className="text-right" />
                     <button onClick={() => removePartida(i)} className="text-muted-foreground hover:text-destructive transition-colors" disabled={partidas.length <= 2}>
