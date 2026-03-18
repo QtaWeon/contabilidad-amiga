@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { BookOpen, BookText, Package, BarChart3 } from "lucide-react";
+import { BookOpen, BookText, Package, BarChart3, List, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
-type Module = "diario" | "mayor" | "inventario";
+type Module = "diario" | "mayor" | "inventario" | "catalogo";
 
 interface SidebarProps {
   activeModule: Module;
@@ -12,9 +13,12 @@ const navItems = [
   { id: "diario" as Module, label: "Libro Diario", icon: BookOpen },
   { id: "mayor" as Module, label: "Libro Mayor", icon: BookText },
   { id: "inventario" as Module, label: "Inventario", icon: Package },
+  { id: "catalogo" as Module, label: "Catálogo de Cuentas", icon: List },
 ];
 
 const AppSidebar = ({ activeModule, onModuleChange }: SidebarProps) => {
+  const { user, logout } = useAuth();
+
   return (
     <aside className="w-64 min-h-screen bg-sidebar text-sidebar-foreground flex flex-col">
       <div className="p-6 border-b border-sidebar-border">
@@ -48,7 +52,15 @@ const AppSidebar = ({ activeModule, onModuleChange }: SidebarProps) => {
         })}
       </nav>
 
-      <div className="p-4 border-t border-sidebar-border">
+      <div className="p-4 border-t border-sidebar-border space-y-3">
+        {user && (
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-sidebar-foreground/60 font-body truncate max-w-[140px]">{user.email}</span>
+            <button onClick={logout} className="text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors" title="Cerrar sesión">
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
+        )}
         <p className="text-xs text-sidebar-foreground/40 text-center font-body">
           © 2026 Sistema Contable Educativo
         </p>
