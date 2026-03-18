@@ -32,9 +32,16 @@ const LibroMayor = ({ asientos }: LibroMayorProps) => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-display font-bold text-foreground">Libro Mayor</h2>
-        <p className="text-muted-foreground font-body text-sm">Cuentas T — Resumen por cuenta contable</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-display font-bold text-foreground">Libro Mayor</h2>
+          <p className="text-muted-foreground font-body text-sm">Cuentas T — Resumen por cuenta contable</p>
+        </div>
+        {cuentasList.length > 0 && (
+          <Button variant="outline" onClick={() => exportLibroMayorPDF(asientos)} className="font-body">
+            <FileDown className="h-4 w-4 mr-2" /> Exportar PDF
+          </Button>
+        )}
       </div>
 
       {cuentasList.length === 0 && (

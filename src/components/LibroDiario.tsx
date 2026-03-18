@@ -129,6 +129,7 @@ const LibroDiario = ({ asientos, onAddAsiento, onDeleteAsiento }: LibroDiarioPro
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="bg-card rounded-lg border shadow-sm overflow-hidden">

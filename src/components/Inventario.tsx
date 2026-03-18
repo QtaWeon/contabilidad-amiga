@@ -92,6 +92,7 @@ const Inventario = ({ items, onAddItem, onDeleteItem }: InventarioProps) => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="bg-card rounded-lg border shadow-sm overflow-hidden">
