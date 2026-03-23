@@ -2,6 +2,7 @@ import { FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { AsientoContable, CuentaMayor } from "@/types/accounting";
 import { exportLibroMayorPDF } from "@/lib/pdfExport";
+import { formatCurrency } from "@/lib/currency";
 
 interface LibroMayorProps {
   asientos: AsientoContable[];
@@ -70,11 +71,11 @@ const LibroMayor = ({ asientos }: LibroMayorProps) => {
                   {cuenta.movimientos.filter(m => m.debe > 0).map((m, i) => (
                     <div key={i} className={`px-3 py-2 text-sm font-body flex justify-between ${i % 2 === 1 ? "bg-muted/30" : ""}`}>
                       <span className="text-muted-foreground text-xs">{m.fecha}</span>
-                      <span className="tabular-nums">Q{m.debe.toFixed(2)}</span>
+                      <span className="tabular-nums">{formatCurrency(m.debe)}</span>
                     </div>
                   ))}
                   <div className="px-3 py-2 border-t font-semibold text-sm font-body text-right tabular-nums">
-                    Q{totalDebe.toFixed(2)}
+                    {formatCurrency(totalDebe)}
                   </div>
                 </div>
                 {/* HABER */}
@@ -85,16 +86,16 @@ const LibroMayor = ({ asientos }: LibroMayorProps) => {
                   {cuenta.movimientos.filter(m => m.haber > 0).map((m, i) => (
                     <div key={i} className={`px-3 py-2 text-sm font-body flex justify-between ${i % 2 === 1 ? "bg-muted/30" : ""}`}>
                       <span className="text-muted-foreground text-xs">{m.fecha}</span>
-                      <span className="tabular-nums">Q{m.haber.toFixed(2)}</span>
+                      <span className="tabular-nums">{formatCurrency(m.haber)}</span>
                     </div>
                   ))}
                   <div className="px-3 py-2 border-t font-semibold text-sm font-body text-right tabular-nums">
-                    Q{totalHaber.toFixed(2)}
+                    {formatCurrency(totalHaber)}
                   </div>
                 </div>
               </div>
               <div className={`px-4 py-2 text-center text-sm font-body font-bold border-t ${saldo >= 0 ? "text-success" : "text-destructive"}`}>
-                Saldo: Q{Math.abs(saldo).toFixed(2)} {saldo >= 0 ? "(Deudor)" : "(Acreedor)"}
+                Saldo: {formatCurrency(Math.abs(saldo))} {saldo >= 0 ? "(Deudor)" : "(Acreedor)"}
               </div>
             </div>
           );

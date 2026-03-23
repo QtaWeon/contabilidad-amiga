@@ -27,9 +27,11 @@ const CatalogoCuentas = ({ onSelectCuenta, mode = "manage" }: CatalogoCuentasPro
 
   useEffect(() => {
     if (!user) return;
-    const q = query(collection(db, "catalogo_cuentas"), where("userId", "==", user.uid), orderBy("codigo"));
+    const q = query(collection(db, "catalogo_cuentas"), where("userId", "==", user.uid));
     const unsub = onSnapshot(q, (snap) => {
-      setCustomCuentas(snap.docs.map(d => ({ id: d.id, ...d.data() } as CuentaCatalogo)));
+      const data = snap.docs.map(d => ({ id: d.id, ...d.data() } as CuentaCatalogo));
+      const sortedData = data.sort((a, b) => a.codigo.localeCompare(b.codigo));
+      setCustomCuentas(sortedData);
     });
     return unsub;
   }, [user]);

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { formatCurrency } from "@/lib/currency";
+import { CURRENCY_CONFIG } from "@/lib/currency";
 import { Plus, Trash2, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,13 +79,13 @@ const Inventario = ({ items, onAddItem, onDeleteItem }: InventarioProps) => {
                   <Input type="number" min="1" value={cantidad || ""} onChange={(e) => setCantidad(Number(e.target.value))} />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Costo Unitario (Q)</label>
+                  <label className="text-sm font-medium">Costo Unitario ({CURRENCY_CONFIG.symbol})</label>
                   <Input type="number" min="0" step="0.01" value={costoUnitario || ""} onChange={(e) => setCostoUnitario(Number(e.target.value))} />
                 </div>
               </div>
               <div className="flex justify-between items-center pt-4 border-t">
                 <span className="text-sm font-semibold">
-                  Total: Q{(cantidad * costoUnitario).toFixed(2)}
+                  Total: {formatCurrency(cantidad * costoUnitario)}
                 </span>
                 <Button onClick={handleSubmit} disabled={!codigo || !descripcion || cantidad <= 0 || costoUnitario <= 0} className="bg-accent text-accent-foreground hover:bg-accent/90">
                   Guardar
@@ -122,8 +124,8 @@ const Inventario = ({ items, onAddItem, onDeleteItem }: InventarioProps) => {
                 <td className="px-4 py-2">{item.descripcion}</td>
                 <td className="px-4 py-2 text-muted-foreground">{item.categoria}</td>
                 <td className="px-4 py-2 text-right tabular-nums">{item.cantidad}</td>
-                <td className="px-4 py-2 text-right tabular-nums">Q{item.costoUnitario.toFixed(2)}</td>
-                <td className="px-4 py-2 text-right tabular-nums font-semibold">Q{item.costoTotal.toFixed(2)}</td>
+                <td className="px-4 py-2 text-right tabular-nums">{formatCurrency(item.costoUnitario)}</td>
+                <td className="px-4 py-2 text-right tabular-nums font-semibold">{formatCurrency(item.costoTotal)}</td>
                 <td className="px-4 py-2">
                   <button onClick={() => item.id && onDeleteItem(item.id)} className="text-muted-foreground hover:text-destructive transition-colors">
                     <Trash2 className="h-4 w-4" />
@@ -136,7 +138,7 @@ const Inventario = ({ items, onAddItem, onDeleteItem }: InventarioProps) => {
             <tfoot>
               <tr className="border-t bg-muted">
                 <td colSpan={5} className="px-4 py-3 text-right font-semibold">Total Inventario:</td>
-                <td className="px-4 py-3 text-right font-bold tabular-nums">Q{totalInventario.toFixed(2)}</td>
+                <td className="px-4 py-3 text-right font-bold tabular-nums">{formatCurrency(totalInventario)}</td>
                 <td></td>
               </tr>
             </tfoot>

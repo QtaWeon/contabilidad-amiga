@@ -22,10 +22,11 @@ const Index = () => {
 
   useEffect(() => {
     if (!user) return;
-    const q = query(collection(db, "asientos"), where("userId", "==", user.uid), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "asientos"), where("userId", "==", user.uid));
     const unsub = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as AsientoContable[];
-      setAsientos(data);
+      const sortedData = data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      setAsientos(sortedData);
     }, (error) => {
       console.error("Error loading asientos:", error);
       toast({ title: "Error", description: "No se pudieron cargar los asientos.", variant: "destructive" });
@@ -35,10 +36,11 @@ const Index = () => {
 
   useEffect(() => {
     if (!user) return;
-    const q = query(collection(db, "inventario"), where("userId", "==", user.uid), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "inventario"), where("userId", "==", user.uid));
     const unsub = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as ItemInventario[];
-      setInventarioItems(data);
+      const sortedData = data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      setInventarioItems(sortedData);
     }, (error) => {
       console.error("Error loading inventario:", error);
       toast({ title: "Error", description: "No se pudo cargar el inventario.", variant: "destructive" });

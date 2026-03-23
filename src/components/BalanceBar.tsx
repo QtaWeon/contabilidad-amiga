@@ -1,3 +1,5 @@
+import { formatCurrency } from "@/lib/currency";
+
 interface BalanceBarProps {
   totalDebe: number;
   totalHaber: number;
@@ -16,14 +18,14 @@ const BalanceBar = ({ totalDebe, totalHaber }: BalanceBarProps) => {
       }`}
     >
       <div className="flex gap-8">
-        <span>Total Debe: Q{totalDebe.toFixed(2)}</span>
-        <span>Total Haber: Q{totalHaber.toFixed(2)}</span>
+        <span>Total Debe: {formatCurrency(totalDebe)}</span>
+        <span>Total Haber: {formatCurrency(totalHaber)}</span>
       </div>
       <div>
         {balanced ? (
           <span>✓ Cuadrado — Los registros están balanceados</span>
         ) : (
-          <span>✗ Descuadre: Q{difference.toFixed(2)}</span>
+          <span>✗ Descuadre: {formatCurrency(difference)}</span>
         )}
       </div>
     </div>

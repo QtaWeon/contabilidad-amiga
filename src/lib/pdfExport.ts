@@ -1,13 +1,14 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { AsientoContable, ItemInventario } from "@/types/accounting";
+import { formatCurrencyPDF } from "@/lib/currency";
 
 export const exportLibroDiarioPDF = (asientos: AsientoContable[]) => {
   const doc = new jsPDF();
   doc.setFontSize(18);
   doc.text("Libro Diario", 14, 20);
   doc.setFontSize(10);
-  doc.text(`Generado: ${new Date().toLocaleDateString("es-GT")}`, 14, 28);
+  doc.text(`Generado: ${new Date().toLocaleDateString("es-PY")}`, 14, 28);
 
   const rows: (string | number)[][] = [];
   asientos.forEach((asiento) => {
@@ -16,8 +17,8 @@ export const exportLibroDiarioPDF = (asientos: AsientoContable[]) => {
         i === 0 ? asiento.fecha : "",
         p.cuenta,
         i === 0 ? asiento.descripcion : "",
-        p.debe > 0 ? `Q${p.debe.toFixed(2)}` : "",
-        p.haber > 0 ? `Q${p.haber.toFixed(2)}` : "",
+        p.debe > 0 ? formatCurrencyPDF(p.debe) : "",
+        p.haber > 0 ? formatCurrencyPDF(p.haber) : "",
       ]);
     });
     rows.push(["", "", "", "", ""]); // separator
@@ -39,7 +40,7 @@ export const exportLibroMayorPDF = (asientos: AsientoContable[]) => {
   doc.setFontSize(18);
   doc.text("Libro Mayor", 14, 20);
   doc.setFontSize(10);
-  doc.text(`Generado: ${new Date().toLocaleDateString("es-GT")}`, 14, 28);
+  doc.text(`Generado: ${new Date().toLocaleDateString("es-PY")}`, 14, 28);
 
   // Build T-accounts
   const cuentas: Record<string, { debe: { fecha: string; monto: number }[]; haber: { fecha: string; monto: number }[] }> = {};
@@ -71,14 +72,14 @@ export const exportLibroMayorPDF = (asientos: AsientoContable[]) => {
     for (let i = 0; i < maxLen; i++) {
       rows.push([
         data.debe[i]?.fecha || "",
-        data.debe[i] ? `Q${data.debe[i].monto.toFixed(2)}` : "",
+        data.debe[i] ? formatCurrencyPDF(data.debe[i].monto) : "",
         data.haber[i]?.fecha || "",
-        data.haber[i] ? `Q${data.haber[i].monto.toFixed(2)}` : "",
+        data.haber[i] ? formatCurrencyPDF(data.haber[i].monto) : "",
       ]);
     }
     rows.push([
-      "Total", `Q${totalDebe.toFixed(2)}`,
-      "Total", `Q${totalHaber.toFixed(2)}`,
+      "Total", formatCurrencyPDF(totalDebe),
+      "Total", formatCurrencyPDF(totalHaber),
     ]);
 
     autoTable(doc, {
@@ -93,7 +94,7 @@ export const exportLibroMayorPDF = (asientos: AsientoContable[]) => {
     y = (doc as any).lastAutoTable.finalY + 4;
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text(`Saldo: Q${Math.abs(saldo).toFixed(2)} (${saldo >= 0 ? "Deudor" : "Acreedor"})`, 14, y);
+    doc.text(`Saldo: ${formatCurrencyPDF(Math.abs(saldo))} (${saldo >= 0 ? "Deudor" : "Acreedor"})`, 14, y);
     y += 10;
   });
 
@@ -105,19 +106,19 @@ export const exportInventarioPDF = (items: ItemInventario[]) => {
   doc.setFontSize(18);
   doc.text("Inventario", 14, 20);
   doc.setFontSize(10);
-  doc.text(`Generado: ${new Date().toLocaleDateString("es-GT")}`, 14, 28);
+  doc.text(`Generado: ${new Date().toLocaleDateString("es-PY")}`, 14, 28);
 
   const rows = items.map((item) => [
     item.codigo,
     item.descripcion,
     item.categoria,
     item.cantidad.toString(),
-    `Q${item.costoUnitario.toFixed(2)}`,
-    `Q${item.costoTotal.toFixed(2)}`,
+    formatCurrencyPDF(item.costoUnitario),
+    formatCurrencyPDF(item.costoTotal),
   ]);
 
   const total = items.reduce((s, i) => s + i.costoTotal, 0);
-  rows.push(["", "", "", "", "Total:", `Q${total.toFixed(2)}`]);
+  rows.push(["", "", "", "", "Total:", formatCurrencyPDF(total)]);
 
   autoTable(doc, {
     startY: 34,

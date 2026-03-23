@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { AsientoContable, Partida } from "@/types/accounting";
 import { exportLibroDiarioPDF } from "@/lib/pdfExport";
+import { formatCurrency } from "@/lib/currency";
 import CuentaSelector from "@/components/CuentaSelector";
 
 interface LibroDiarioProps {
@@ -144,7 +145,7 @@ const LibroDiario = ({ asientos, onAddAsiento, onUpdateAsiento, onDeleteAsiento 
               <div className="flex justify-between items-center pt-4 border-t">
                 <div className="text-sm font-body">
                   <span className={`font-semibold ${isBalanced ? "text-success" : "text-destructive"}`}>
-                    Debe: Q{totalDebe.toFixed(2)} | Haber: Q{totalHaber.toFixed(2)}
+                    Debe: {formatCurrency(totalDebe)} | Haber: {formatCurrency(totalHaber)}
                     {isBalanced ? " ✓" : " — Descuadrado"}
                   </span>
                 </div>
@@ -192,8 +193,8 @@ const LibroDiario = ({ asientos, onAddAsiento, onUpdateAsiento, onDeleteAsiento 
                       {asiento.descripcion}
                     </td>
                   )}
-                  <td className="px-4 py-2 text-right tabular-nums">{partida.debe > 0 ? `Q${partida.debe.toFixed(2)}` : ""}</td>
-                  <td className="px-4 py-2 text-right tabular-nums">{partida.haber > 0 ? `Q${partida.haber.toFixed(2)}` : ""}</td>
+                  <td className="px-4 py-2 text-right tabular-nums">{partida.debe > 0 ? formatCurrency(partida.debe) : ""}</td>
+                  <td className="px-4 py-2 text-right tabular-nums">{partida.haber > 0 ? formatCurrency(partida.haber) : ""}</td>
                   {partidaIdx === 0 && (
                     <td className="px-4 py-2 align-top" rowSpan={asiento.partidas.length}>
                       <div className="flex gap-1">
