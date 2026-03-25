@@ -50,6 +50,7 @@ export interface MovimientoKardex {
 }
 
 export interface KardexLinea {
+  movimientoId: string;
   fecha: string;
   descripcion: string;
   tipo: "compra" | "venta";

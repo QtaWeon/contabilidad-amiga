@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, FileDown } from "lucide-react";
+import { Plus, FileDown, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -12,6 +12,8 @@ import { exportKardexPDF } from "@/lib/pdfExport";
 interface KardexFIFOProps {
   movimientos: MovimientoKardex[];
   onAddMovimiento: (mov: Omit<MovimientoKardex, "id" | "createdAt" | "userId">) => void;
+  onUpdateMovimiento: (id: string, mov: Omit<MovimientoKardex, "id" | "createdAt" | "userId">) => void;
+  onDeleteMovimiento: (id: string) => void;
 }
 
 interface LoteFIFO {
@@ -38,6 +40,7 @@ const calcularKardex = (movimientos: MovimientoKardex[], productoId: string): Ka
       const saldoTotal = lotes.reduce((s, l) => s + l.cantidad * l.costoUnitario, 0);
 
       lineas.push({
+        movimientoId: mov.id || "",
         fecha: mov.fecha,
         descripcion: mov.descripcion,
         tipo: "compra",
@@ -52,7 +55,6 @@ const calcularKardex = (movimientos: MovimientoKardex[], productoId: string): Ka
         saldoTotal,
       });
     } else {
-      // FIFO: sell from oldest lots first
       let remaining = mov.cantidad;
       let totalCostoSalida = 0;
 
@@ -71,6 +73,7 @@ const calcularKardex = (movimientos: MovimientoKardex[], productoId: string): Ka
       const saldoTotal = lotes.reduce((s, l) => s + l.cantidad * l.costoUnitario, 0);
 
       lineas.push({
+        movimientoId: mov.id || "",
         fecha: mov.fecha,
         descripcion: mov.descripcion,
         tipo: "venta",
@@ -90,7 +93,7 @@ const calcularKardex = (movimientos: MovimientoKardex[], productoId: string): Ka
   return lineas;
 };
 
-const KardexFIFO = ({ movimientos, onAddMovimiento }: KardexFIFOProps) => {
+const KardexFIFO = ({ movimientos, onAddMovimiento, onUpdateMovimiento, onDeleteMovimiento }: KardexFIFOProps) => {
   const [open, setOpen] = useState(false);
   const [fecha, setFecha] = useState("");
   const [descripcion, setDescripcion] = useState("");
@@ -100,8 +103,8 @@ const KardexFIFO = ({ movimientos, onAddMovimiento }: KardexFIFOProps) => {
   const [productoId, setProductoId] = useState("");
   const [productoNombre, setProductoNombre] = useState("");
   const [selectedProducto, setSelectedProducto] = useState<string>("all");
+  const [editingId, setEditingId] = useState<string | null>(null);
 
-  // Get unique products
   const productos = useMemo(() => {
     const map = new Map<string, string>();
     movimientos.forEach(m => map.set(m.productoId, m.productoNombre));
@@ -113,14 +116,48 @@ const KardexFIFO = ({ movimientos, onAddMovimiento }: KardexFIFOProps) => {
     return calcularKardex(movimientos, selectedProducto);
   }, [movimientos, selectedProducto]);
 
+  const resetForm = () => {
+    setFecha("");
+    setDescripcion("");
+    setTipo("compra");
+    setCantidad(0);
+    setCostoUnitario(0);
+    setProductoId("");
+    setProductoNombre("");
+    setEditingId(null);
+  };
+
+  const handleOpenNew = () => {
+    resetForm();
+    setOpen(true);
+  };
+
+  const handleEdit = (movId: string) => {
+    const mov = movimientos.find(m => m.id === movId);
+    if (!mov) return;
+    setFecha(mov.fecha);
+    setDescripcion(mov.descripcion);
+    setTipo(mov.tipo);
+    setCantidad(mov.cantidad);
+    setCostoUnitario(mov.costoUnitario);
+    setProductoId(mov.productoId);
+    setProductoNombre(mov.productoNombre);
+    setEditingId(movId);
+    setOpen(true);
+  };
+
   const handleSubmit = () => {
     if (!fecha || !descripcion || cantidad <= 0 || !productoId || !productoNombre) return;
     if (tipo === "compra" && costoUnitario <= 0) return;
-    onAddMovimiento({ fecha, descripcion, tipo, cantidad, costoUnitario, productoId, productoNombre });
-    setFecha("");
-    setDescripcion("");
-    setCantidad(0);
-    setCostoUnitario(0);
+
+    const data = { fecha, descripcion, tipo, cantidad, costoUnitario, productoId, productoNombre };
+
+    if (editingId) {
+      onUpdateMovimiento(editingId, data);
+    } else {
+      onAddMovimiento(data);
+    }
+    resetForm();
     setOpen(false);
   };
 
@@ -140,15 +177,17 @@ const KardexFIFO = ({ movimientos, onAddMovimiento }: KardexFIFOProps) => {
               <FileDown className="h-4 w-4 mr-2" /> Exportar PDF
             </Button>
           )}
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button className="bg-accent text-accent-foreground hover:bg-accent/90 font-body">
+              <Button onClick={handleOpenNew} className="bg-accent text-accent-foreground hover:bg-accent/90 font-body">
                 <Plus className="h-4 w-4 mr-2" /> Nuevo Movimiento
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
-                <DialogTitle className="font-display text-xl">Registrar Movimiento</DialogTitle>
+                <DialogTitle className="font-display text-xl">
+                  {editingId ? "Editar Movimiento" : "Registrar Movimiento"}
+                </DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-4 font-body">
                 <div className="grid grid-cols-2 gap-4">
@@ -199,7 +238,7 @@ const KardexFIFO = ({ movimientos, onAddMovimiento }: KardexFIFOProps) => {
                   </div>
                 )}
                 <Button onClick={handleSubmit} disabled={!fecha || !descripcion || cantidad <= 0 || !productoId || !productoNombre || (tipo === "compra" && costoUnitario <= 0)} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-                  Registrar
+                  {editingId ? "Guardar Cambios" : "Registrar"}
                 </Button>
               </div>
             </DialogContent>
@@ -229,14 +268,15 @@ const KardexFIFO = ({ movimientos, onAddMovimiento }: KardexFIFOProps) => {
         </div>
       ) : (
         <div className="bg-card rounded-lg border shadow-sm overflow-x-auto">
-          <table className="w-full font-body text-sm min-w-[900px]">
+          <table className="w-full font-body text-sm min-w-[1000px]">
             <thead>
               <tr className="bg-muted">
                 <th rowSpan={2} className="text-left px-3 py-2 font-semibold border-r">Fecha</th>
                 <th rowSpan={2} className="text-left px-3 py-2 font-semibold border-r">Descripción</th>
                 <th colSpan={3} className="text-center px-3 py-2 font-semibold border-r bg-success/10 text-success">Entradas</th>
                 <th colSpan={3} className="text-center px-3 py-2 font-semibold border-r bg-destructive/10 text-destructive">Salidas</th>
-                <th colSpan={3} className="text-center px-3 py-2 font-semibold bg-accent/10 text-accent">Saldo</th>
+                <th colSpan={3} className="text-center px-3 py-2 font-semibold border-r bg-accent/10 text-accent">Saldo</th>
+                <th rowSpan={2} className="px-2 py-2 font-semibold text-center w-20">Acciones</th>
               </tr>
               <tr className="bg-muted/70 text-xs">
                 <th className="px-2 py-1 text-right border-r font-medium">Cant.</th>
@@ -247,12 +287,12 @@ const KardexFIFO = ({ movimientos, onAddMovimiento }: KardexFIFOProps) => {
                 <th className="px-2 py-1 text-right border-r font-medium">Total</th>
                 <th className="px-2 py-1 text-right border-r font-medium">Cant.</th>
                 <th className="px-2 py-1 text-right border-r font-medium">C.Unit.</th>
-                <th className="px-2 py-1 text-right font-medium">Total</th>
+                <th className="px-2 py-1 text-right border-r font-medium">Total</th>
               </tr>
             </thead>
             <tbody>
               {kardexLineas.length === 0 && (
-                <tr><td colSpan={11} className="text-center py-8 text-muted-foreground">Sin movimientos para este producto.</td></tr>
+                <tr><td colSpan={12} className="text-center py-8 text-muted-foreground">Sin movimientos para este producto.</td></tr>
               )}
               {kardexLineas.map((l, i) => (
                 <tr key={i} className={`${i % 2 === 0 ? "bg-card" : "bg-muted/30"} ${l.tipo === "compra" ? "border-l-2 border-l-success" : "border-l-2 border-l-destructive"}`}>
@@ -266,7 +306,17 @@ const KardexFIFO = ({ movimientos, onAddMovimiento }: KardexFIFOProps) => {
                   <td className="px-2 py-2 text-right tabular-nums border-r font-medium">{l.salidaCantidad > 0 ? formatCurrency(l.salidaTotal) : ""}</td>
                   <td className="px-2 py-2 text-right tabular-nums border-r font-semibold">{l.saldoCantidad}</td>
                   <td className="px-2 py-2 text-right tabular-nums border-r">{formatCurrency(l.saldoCosto)}</td>
-                  <td className="px-2 py-2 text-right tabular-nums font-bold">{formatCurrency(l.saldoTotal)}</td>
+                  <td className="px-2 py-2 text-right tabular-nums border-r font-bold">{formatCurrency(l.saldoTotal)}</td>
+                  <td className="px-2 py-2 text-center">
+                    <div className="flex gap-1 justify-center">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(l.movimientoId)} title="Editar">
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => onDeleteMovimiento(l.movimientoId)} title="Eliminar">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
