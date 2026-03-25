@@ -129,6 +129,26 @@ const Index = () => {
     }
   };
 
+  const handleUpdateKardexMovimiento = async (id: string, mov: Omit<MovimientoKardex, "id" | "createdAt" | "userId">) => {
+    try {
+      await updateDoc(doc(db, "kardex", id), { ...mov });
+      toast({ title: "✓ Movimiento actualizado" });
+    } catch (error) {
+      console.error("Error updating kardex:", error);
+      toast({ title: "Error", description: "No se pudo actualizar el movimiento.", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteKardexMovimiento = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "kardex", id));
+      toast({ title: "Movimiento eliminado" });
+    } catch (error) {
+      console.error("Error deleting kardex:", error);
+      toast({ title: "Error", description: "No se pudo eliminar el movimiento.", variant: "destructive" });
+    }
+  };
+
   const totalDebe = asientos.reduce((sum, a) => sum + a.partidas.reduce((s, p) => s + p.debe, 0), 0);
   const totalHaber = asientos.reduce((sum, a) => sum + a.partidas.reduce((s, p) => s + p.haber, 0), 0);
 
