@@ -66,7 +66,7 @@ const calcularKardex = (movimientos: MovimientoKardex[], productoId: string): Ka
       }
 
       const actualSold = mov.cantidad - remaining;
-      const costoPromSalida = actualSold > 0 ? totalCostoSalida / actualSold : 0;
+      const costoPromSalida = actualSold > 0 ? totalCostoSalida / actualSold : mov.costoUnitario;
       const saldoCantidad = lotes.reduce((s, l) => s + l.cantidad, 0);
       const saldoTotal = lotes.reduce((s, l) => s + l.cantidad * l.costoUnitario, 0);
 
@@ -77,7 +77,7 @@ const calcularKardex = (movimientos: MovimientoKardex[], productoId: string): Ka
         entradaCantidad: 0,
         entradaCosto: 0,
         entradaTotal: 0,
-        salidaCantidad: actualSold,
+        salidaCantidad: mov.cantidad,
         salidaCosto: costoPromSalida,
         salidaTotal: totalCostoSalida,
         saldoCantidad,

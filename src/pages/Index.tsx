@@ -148,7 +148,7 @@ const Index = () => {
         )}
         {activeModule === "catalogo" && <CatalogoCuentas />}
       </main>
-      <BalanceBar totalDebe={totalDebe} totalHaber={totalHaber} />
+      {activeModule === "diario" && <BalanceBar totalDebe={totalDebe} totalHaber={totalHaber} />}
     </div>
   );
 };
