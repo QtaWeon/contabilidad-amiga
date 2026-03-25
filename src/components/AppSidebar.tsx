@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { BookOpen, BookText, Package, BarChart3, List, LogOut } from "lucide-react";
+import { BookOpen, BookText, Package, BarChart3, List, LogOut, Layers } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
-type Module = "diario" | "mayor" | "inventario" | "catalogo";
+type Module = "diario" | "mayor" | "inventario" | "kardex" | "catalogo";
 
 interface SidebarProps {
   activeModule: Module;
@@ -13,6 +13,7 @@ const navItems = [
   { id: "diario" as Module, label: "Libro Diario", icon: BookOpen },
   { id: "mayor" as Module, label: "Libro Mayor", icon: BookText },
   { id: "inventario" as Module, label: "Inventario", icon: Package },
+  { id: "kardex" as Module, label: "Kardex FIFO", icon: Layers },
   { id: "catalogo" as Module, label: "Catálogo de Cuentas", icon: List },
 ];
 
