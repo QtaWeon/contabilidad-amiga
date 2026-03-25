@@ -164,7 +164,7 @@ const Index = () => {
           <Inventario items={inventarioItems} onAddItem={handleAddInventarioItem} onDeleteItem={handleDeleteInventarioItem} />
         )}
         {activeModule === "kardex" && (
-          <KardexFIFO movimientos={kardexMovimientos} onAddMovimiento={handleAddKardexMovimiento} />
+          <KardexFIFO movimientos={kardexMovimientos} onAddMovimiento={handleAddKardexMovimiento} onUpdateMovimiento={handleUpdateKardexMovimiento} onDeleteMovimiento={handleDeleteKardexMovimiento} />
         )}
         {activeModule === "catalogo" && <CatalogoCuentas />}
       </main>
