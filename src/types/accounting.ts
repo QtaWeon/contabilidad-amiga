@@ -35,3 +35,31 @@ export interface ItemInventario {
   categoria: string;
   createdAt?: number;
 }
+
+export interface MovimientoKardex {
+  id?: string;
+  fecha: string;
+  descripcion: string;
+  tipo: "compra" | "venta";
+  cantidad: number;
+  costoUnitario: number;
+  productoId: string;
+  productoNombre: string;
+  userId?: string;
+  createdAt?: number;
+}
+
+export interface KardexLinea {
+  fecha: string;
+  descripcion: string;
+  tipo: "compra" | "venta";
+  entradaCantidad: number;
+  entradaCosto: number;
+  entradaTotal: number;
+  salidaCantidad: number;
+  salidaCosto: number;
+  salidaTotal: number;
+  saldoCantidad: number;
+  saldoCosto: number;
+  saldoTotal: number;
+}

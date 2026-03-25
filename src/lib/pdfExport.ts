@@ -130,3 +130,35 @@ export const exportInventarioPDF = (items: ItemInventario[]) => {
 
   doc.save("inventario.pdf");
 };
+
+export const exportKardexPDF = (lineas: import("@/types/accounting").KardexLinea[], productoNombre: string) => {
+  const doc = new jsPDF({ orientation: "landscape" });
+  doc.setFontSize(18);
+  doc.text(`Kardex FIFO — ${productoNombre}`, 14, 20);
+  doc.setFontSize(10);
+  doc.text(`Generado: ${new Date().toLocaleDateString("es-PY")}`, 14, 28);
+
+  const rows = lineas.map((l) => [
+    l.fecha,
+    l.descripcion,
+    l.entradaCantidad > 0 ? l.entradaCantidad.toString() : "",
+    l.entradaCantidad > 0 ? formatCurrencyPDF(l.entradaCosto) : "",
+    l.entradaCantidad > 0 ? formatCurrencyPDF(l.entradaTotal) : "",
+    l.salidaCantidad > 0 ? l.salidaCantidad.toString() : "",
+    l.salidaCantidad > 0 ? formatCurrencyPDF(l.salidaCosto) : "",
+    l.salidaCantidad > 0 ? formatCurrencyPDF(l.salidaTotal) : "",
+    l.saldoCantidad.toString(),
+    formatCurrencyPDF(l.saldoCosto),
+    formatCurrencyPDF(l.saldoTotal),
+  ]);
+
+  autoTable(doc, {
+    startY: 34,
+    head: [["Fecha", "Descripción", "E.Cant", "E.C.Unit", "E.Total", "S.Cant", "S.C.Unit", "S.Total", "Saldo Cant", "Saldo C.U.", "Saldo Total"]],
+    body: rows,
+    styles: { fontSize: 7 },
+    headStyles: { fillColor: [30, 58, 95] },
+  });
+
+  doc.save(`kardex-${productoNombre.toLowerCase().replace(/\s+/g, "-")}.pdf`);
+};

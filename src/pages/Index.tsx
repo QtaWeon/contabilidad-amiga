@@ -6,18 +6,20 @@ import AppSidebar from "@/components/AppSidebar";
 import LibroDiario from "@/components/LibroDiario";
 import LibroMayor from "@/components/LibroMayor";
 import Inventario from "@/components/Inventario";
+import KardexFIFO from "@/components/KardexFIFO";
 import BalanceBar from "@/components/BalanceBar";
 import CatalogoCuentas from "@/components/CatalogoCuentas";
-import type { AsientoContable, ItemInventario } from "@/types/accounting";
+import type { AsientoContable, ItemInventario, MovimientoKardex } from "@/types/accounting";
 import { useToast } from "@/hooks/use-toast";
 
-type Module = "diario" | "mayor" | "inventario" | "catalogo";
+type Module = "diario" | "mayor" | "inventario" | "kardex" | "catalogo";
 
 const Index = () => {
   const { user } = useAuth();
   const [activeModule, setActiveModule] = useState<Module>("diario");
   const [asientos, setAsientos] = useState<AsientoContable[]>([]);
   const [inventarioItems, setInventarioItems] = useState<ItemInventario[]>([]);
+  const [kardexMovimientos, setKardexMovimientos] = useState<MovimientoKardex[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -44,6 +46,20 @@ const Index = () => {
     }, (error) => {
       console.error("Error loading inventario:", error);
       toast({ title: "Error", description: "No se pudo cargar el inventario.", variant: "destructive" });
+    });
+    return unsub;
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const q = query(collection(db, "kardex"), where("userId", "==", user.uid));
+    const unsub = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as MovimientoKardex[];
+      const sortedData = data.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+      setKardexMovimientos(sortedData);
+    }, (error) => {
+      console.error("Error loading kardex:", error);
+      toast({ title: "Error", description: "No se pudo cargar el kardex.", variant: "destructive" });
     });
     return unsub;
   }, [user]);
@@ -102,6 +118,17 @@ const Index = () => {
     }
   };
 
+  const handleAddKardexMovimiento = async (mov: Omit<MovimientoKardex, "id" | "createdAt" | "userId">) => {
+    if (!user) return;
+    try {
+      await addDoc(collection(db, "kardex"), { ...mov, userId: user.uid, createdAt: Date.now() });
+      toast({ title: `✓ ${mov.tipo === "compra" ? "Compra" : "Venta"} registrada` });
+    } catch (error) {
+      console.error("Error adding kardex:", error);
+      toast({ title: "Error", description: "No se pudo registrar el movimiento.", variant: "destructive" });
+    }
+  };
+
   const totalDebe = asientos.reduce((sum, a) => sum + a.partidas.reduce((s, p) => s + p.debe, 0), 0);
   const totalHaber = asientos.reduce((sum, a) => sum + a.partidas.reduce((s, p) => s + p.haber, 0), 0);
 
@@ -115,6 +142,9 @@ const Index = () => {
         {activeModule === "mayor" && <LibroMayor asientos={asientos} />}
         {activeModule === "inventario" && (
           <Inventario items={inventarioItems} onAddItem={handleAddInventarioItem} onDeleteItem={handleDeleteInventarioItem} />
+        )}
+        {activeModule === "kardex" && (
+          <KardexFIFO movimientos={kardexMovimientos} onAddMovimiento={handleAddKardexMovimiento} />
         )}
         {activeModule === "catalogo" && <CatalogoCuentas />}
       </main>
